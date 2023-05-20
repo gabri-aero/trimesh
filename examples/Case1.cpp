@@ -1,4 +1,5 @@
 #include <Delaunay.hpp>
+#include <iostream>
 
 int main() {
     Coord2D p1{0., 0.};
@@ -9,8 +10,8 @@ int main() {
     std::vector<Coord2D> points{p1, p2, p3, p4};
 
     Delaunay d{points};
-
-    std::vector<Node> n{d.super_triangle()};
+	
+	std::vector<Triangle> triangles = d.compute();
 
     return 0;
-}
+};
