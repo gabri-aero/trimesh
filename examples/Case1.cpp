@@ -2,12 +2,13 @@
 #include <iostream>
 
 int main() {
-    Coord2D p1{0., 0.};
-    Coord2D p2{-3., -1.};
-    Coord2D p3{4., 3.};
-    Coord2D p4{1., 4.};
-
-    std::vector<Coord2D> points{p1, p2, p3, p4};
+	std::vector<Coord2D> points;
+	std::vector<double> x{0,1,2,0,1,2,0,1,2};
+	std::vector<double> y{0,0,0,1,1,1,2,2,2};
+	
+	for(size_t i{0}; i<x.size(); i++) {
+		points.push_back(Coord2D{x[i], y[i]});
+	}
 
     Delaunay d{points};
 	
