@@ -143,6 +143,19 @@ bool Triangle::operator==(const Triangle& other) const {
     return data[0] == other.data[0] && data[1] == other.data[1] && data[2] == other.data[2];
 }
 
+bool Triangle::operator<(const Triangle& other) const {
+    if(data[0] == other.data[0]) {
+        if(data[1] == other.data[1]) {
+            return data[2] < other.data[2];
+        } else {
+            return data[1] < other.data[1];
+        }
+            
+    } else {
+        return data[0] < other.data[0];
+    }
+}
+
 std::ostream& operator<<(std::ostream& os, const Triangle& t) {
     os << "[" 
     << t.data[0].get_index() << " "
@@ -340,13 +353,15 @@ std::vector<Triangle> Delaunay::compute() {
         i++;
     }
 
+    // Ensure proper triangles ordering
+    std::sort(triangles.begin(), triangles.end());
 
     return triangles;
 }
 
-std::vector<Edge> Delaunay::get_edges() {
+std::vector<Edge> Delaunay::get_edges() const {
     std::set<Edge> edges;
-    for(Triangle& triangle: triangles) {
+    for(const Triangle& triangle: triangles) {
         auto triangle_edges = triangle.get_edges();
         edges.insert(triangle_edges.begin(), triangle_edges.end());
     }
@@ -355,10 +370,22 @@ std::vector<Edge> Delaunay::get_edges() {
     return sorted_edges;
 }
 
-std::vector<std::array<int, 2>> Delaunay::get_edges_index() {
+std::vector<std::array<int, 2>> Delaunay::get_edges_index() const {
     std::vector<std::array<int, 2>> edges_index;
     for(const Edge& edge: get_edges()) {
         edges_index.push_back(edge.get_vertices_index());
     }
     return edges_index;
+}
+
+std::vector<Triangle> Delaunay::get_triangles() const {
+    return triangles;
+}
+
+std::vector<std::array<int, 3>> Delaunay::get_triangles_index() const {
+    std::vector<std::array<int, 3>> triangles_index;
+    for(const Triangle& triangle: get_triangles()) {
+        triangles_index.push_back(triangle.get_vertices_index());
+    }
+    return triangles_index;
 }
