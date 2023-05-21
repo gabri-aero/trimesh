@@ -120,6 +120,10 @@ std::array<Node, 2> Edge::get_vertices() const {
     return data;
 }
 
+std::array<int, 2> Edge::get_vertices_index() const {
+    return std::array<int, 2>{data[0].get_index(), data[1].get_index()};
+}
+
 // Triangle constructors
 Triangle::Triangle(Node n1, Node n2, Node n3)
 {
@@ -162,6 +166,15 @@ std::array<int, 3> Triangle::get_vertices_index() const {
         index[i] = data[i].get_index();
     }
     return index;
+}
+
+std::array<std::array<int, 2>, 3> Triangle::get_edges_index() const {
+    std::array<Edge, 3> edges{get_edges()};
+    return std::array<std::array<int, 2>, 3>{
+        edges[0].get_vertices_index(),
+        edges[1].get_vertices_index(),
+        edges[2].get_vertices_index()
+    };
 }
 
 // Compute triangle circumcenter based on intersection of two heights
@@ -329,4 +342,23 @@ std::vector<Triangle> Delaunay::compute() {
 
 
     return triangles;
+}
+
+std::vector<Edge> Delaunay::get_edges() {
+    std::set<Edge> edges;
+    for(Triangle& triangle: triangles) {
+        auto triangle_edges = triangle.get_edges();
+        edges.insert(triangle_edges.begin(), triangle_edges.end());
+    }
+    std::vector<Edge> sorted_edges(edges.begin(), edges.end());
+    std::sort(sorted_edges.begin(), sorted_edges.end());
+    return sorted_edges;
+}
+
+std::vector<std::array<int, 2>> Delaunay::get_edges_index() {
+    std::vector<std::array<int, 2>> edges_index;
+    for(const Edge& edge: get_edges()) {
+        edges_index.push_back(edge.get_vertices_index());
+    }
+    return edges_index;
 }
