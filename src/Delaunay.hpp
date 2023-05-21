@@ -1,5 +1,6 @@
 #include <vector>
 #include <array>
+#include <iostream>
 
 #ifndef _DELAUNAY_HPP_
 #define _DELAUNAY_HPP_
@@ -33,19 +34,35 @@ public:
 };
 
 
+class Edge
+{
+    std::array<Node, 2> data;
+public:
+    Edge();
+    Edge(Node, Node);
+    Edge(const Edge &edge);
+    bool operator==(const Edge& other) const;
+    bool operator<(const Edge& other) const;
+    std::array<Node, 2> get_vertices() const;
+    friend std::ostream& operator<<(std::ostream& os, const Edge& e);
+};
+
+
 class Triangle
 {
     std::array<Node, 3> data;
+    std::array<Edge, 3> edges;
 public:
-    Triangle(std::array<Node, 3>);
     Triangle(Node, Node, Node);
     Node& operator[](int index);
     bool operator==(const Triangle& other) const;
     std::array<Node, 3> get_vertices() const;
+    std::array<Edge, 3> get_edges() const;
+    std::array<int, 3> get_vertices_index() const;
     Coord2D circumcenter();
-    bool circumscribe(Node& n);
+    bool circumscribe(Node& n);    
+    friend std::ostream& operator<<(std::ostream& os, const Triangle& t);
 };
-
 
 class Delaunay
 {

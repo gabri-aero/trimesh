@@ -3,8 +3,8 @@
 
 int main() {
 	std::vector<Coord2D> points;
-	std::vector<double> x{0,1,2,0,1,2,0,1,2};
-	std::vector<double> y{0,0,0,1,1,1,2,2,2};
+	std::vector<double> x{0,4,2,5,5};
+	std::vector<double> y{0,0,2,1,7};
 	
 	for(size_t i{0}; i<x.size(); i++) {
 		points.push_back(Coord2D{x[i], y[i]});

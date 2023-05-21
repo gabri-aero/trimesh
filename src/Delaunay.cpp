@@ -83,14 +83,49 @@ double slope(const Coord2D& p1, const Coord2D& p2) {
     return (p2.y - p1.y) / (p2.x - p1.x);
 }
 
-// Triangle constructors
-Triangle::Triangle(std::array<Node, 3> data)
-    : data{data} {
+// Edge constructors
+Edge::Edge() {
 }
 
+Edge::Edge(Node n1, Node n2)
+{
+    data = std::array<Node, 2> {n1, n2};
+    std::sort(data.begin(), data.end());
+}
+
+Edge::Edge(const Edge &edge) {
+    data = edge.data;
+}
+
+bool Edge::operator==(const Edge& other) const {
+    return data[0] == other.data[0] && data[1] == other.data[1];
+}
+
+bool Edge::operator<(const Edge& other) const {
+    if(data[0] == other.data[0]) {
+        return data[1] < other.data[1];
+    } else {
+        return data[0] < other.data[0];
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const Edge& t) {
+    os << "[" 
+    << t.data[0].get_index() << " "
+    << t.data[1].get_index() << "]";
+    return os;
+}
+
+std::array<Node, 2> Edge::get_vertices() const {
+    return data;
+}
+
+// Triangle constructors
 Triangle::Triangle(Node n1, Node n2, Node n3)
 {
     data = std::array<Node, 3> {n1, n2, n3};
+    std::sort(data.begin(), data.end());
+    edges = std::array<Edge, 3>{Edge{n1, n2}, Edge{n2, n3}, Edge{n1, n3}};
 }
 
 // Define triangle subscript operator
@@ -104,9 +139,29 @@ bool Triangle::operator==(const Triangle& other) const {
     return data[0] == other.data[0] && data[1] == other.data[1] && data[2] == other.data[2];
 }
 
+std::ostream& operator<<(std::ostream& os, const Triangle& t) {
+    os << "[" 
+    << t.data[0].get_index() << " "
+    << t.data[1].get_index() << " " 
+    << t.data[2].get_index() << "]";
+    return os;
+}
+
 // Getter for triangle vertices
 std::array<Node, 3> Triangle::get_vertices() const {
     return data;
+}
+
+std::array<Edge, 3> Triangle::get_edges() const {
+    return edges;
+}
+
+std::array<int, 3> Triangle::get_vertices_index() const {
+    std::array<int, 3> index;
+    for(int i{0}; i < 3; i++) {
+        index[i] = data[i].get_index();
+    }
+    return index;
 }
 
 // Compute triangle circumcenter based on intersection of two heights
@@ -123,9 +178,19 @@ Coord2D Triangle::circumcenter() {
     // Compute the slope of two of the heights (perpendicular to edge slope)
     double m1 = -1 / slope(v2, v3);
     double m2 = -1 / slope(v3, v1);
+    double m3 = -1 / slope(v1, v2);
+
+    // Checking for vertical lines
+    if(std::isinf(m1)) {
+        m1 = m3;
+        p1 = p3;
+    } else if(std::isinf(m2)) {
+        m2 = m3;
+        p2 = p3;
+    }
 
     // Solve for lines intersection
-    double x = ( (p2.y - m2*p2.x) + (p1.y - m1*p1.x) ) / (m1 - m2);
+    double x = ( (p2.y - m2*p2.x) - (p1.y - m1*p1.x) ) / (m1 - m2);
     double y = m1 * (x - p1.x) + p1.y;
 
     return Coord2D{x, y};
@@ -182,18 +247,17 @@ Triangle Delaunay::super_triangle() {
     // Set a delta with extreme values and outer rect-supertriangle
     double dx = max_x - min_x;
     double dy = max_y - min_y;
-    double delta = dx + dy;
 
     // Compute values of rect-supertriangle
-    max_x += delta;
-    min_x -= delta;
-    max_y += delta;
-    min_y -= delta;
+    max_x += 3*dx;
+    min_x -= 3*dx;
+    max_y += 3*dy;
+    min_y -= 3*dy;
 
     // Create supertriangle nodes
     Node n1{min_x, min_y, -3};
     Node n2{max_x, min_y, -2};
-    Node n3{max_x, max_y, -1};
+    Node n3{(max_x+min_x)*0.5, max_y, -1};
 
     Triangle outer_nodes{n1, n2, n3};
 
@@ -210,29 +274,59 @@ std::vector<Triangle> Delaunay::compute() {
     triangles.push_back(super_triangle());
 
     // Instantiate removed triangles vertices
-    std::set<Node> vertices{};
+    std::vector<Edge> edges{};
 
     // Loop over all nodes
     for(Node& node: nodes) {
+        // Ensure vertices to be removed is clear
+        edges.clear();
         // Loop over all triangles
-        for(Triangle& triangle: triangles) {
+        for(size_t i{0}; i<triangles.size(); i++) {
+            auto triangle = triangles.at(i);
             if(triangle.circumscribe(node)) {
                 // Retrieve vertices and add to removed ones
-                auto v = triangle.get_vertices();
-                vertices.insert(v.begin(), v.end());
+                auto v = triangle.get_edges();
+                edges.insert(edges.end(), v.begin(), v.end());
                 // Remove triangle because it is no longer Delaunay
                 triangles.erase(std::remove(triangles.begin(), triangles.end(), triangle), triangles.end());
+                i--;
             }
         }
-        // Connect to retrieved vertices
-        for (auto it1 = vertices.begin(); it1 != vertices.end(); it1++) {
-            for (auto it2 = std::next(it1); it2 != vertices.end(); it2++) {
-                Node n1 = *it1;
-                Node n2 = *it2;
-                triangles.push_back(Triangle{node, n1, n2});
+        // Remove duplicated edges (they do not form Delaunay triangules)
+        std::sort(edges.begin(), edges.end());
+        int N{static_cast<int>(edges.size())};
+        Edge edge_to_remove{};
+        for(size_t i{0}; i < (N-1); i++) {
+            if(edges.at(i) == edges.at(i+1)) {
+                edge_to_remove = edges.at(i);
+                edges.erase(std::remove(edges.begin(), edges.end(), edge_to_remove), edges.end());
+                i--;
+                N-=2;
             }
+        }
+        // Create new triangles
+        for (const Edge& edge: edges) {
+            auto nodes = edge.get_vertices();
+            Node n1 = nodes.at(0);
+            Node n2 = nodes.at(1);
+            triangles.push_back(Triangle{node, n1, n2});
         }
     }
+
+    // Remove super triangle nodes
+    std::array<int, 3> index; // Instantiate variable
+    size_t i{0};
+    while(i < triangles.size()) {
+        index = triangles[i].get_vertices_index();
+        for(int& j: index) {
+            if(j < 0) {
+                triangles.erase(std::remove(triangles.begin(), triangles.end(), triangles[i--]), triangles.end());
+                break;
+            }
+        }
+        i++;
+    }
+
 
     return triangles;
 }
