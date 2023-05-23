@@ -64,7 +64,7 @@ void plot_mesh(std::vector<Edge> edges, std::vector<Node> nodes = std::vector<No
         ));
     }
 
-    gp << "set title 'Node Plot'\n";
+    gp << "set title 'Mesh Plot'\n";
     gp << "set xlabel 'X'\n";
     gp << "set ylabel 'Y'\n";
     

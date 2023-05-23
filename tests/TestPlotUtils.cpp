@@ -9,17 +9,14 @@ TEST(PlotUtilsTest, PlotNodes) {
   std::vector<double> x;
   std::vector<double> y;
   
-  // Seed the random number generator
   std::srand(static_cast<unsigned>(std::time(nullptr)));
-
-  // Generate an array of 100 random double numbers between 0 and 10
-  const int arraySize = 100;
+  const int n = 100;
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dis(0.0, 10.0);
 
-    for (int i = 0; i < arraySize; ++i) {
+    for (int i = 0; i < n; ++i) {
         x.push_back(dis(gen));
         y.push_back(dis(gen));
     }
