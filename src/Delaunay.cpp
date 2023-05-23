@@ -56,6 +56,14 @@ bool Node::operator<(const Node& other) const {
 }
 
 // Node getters
+double Node::get_x() const {
+    return coords.x;
+}
+
+double Node::get_y() const {
+    return coords.y;
+}
+
 Coord2D Node::get_coords() const {
     return coords;
 }
@@ -357,6 +365,10 @@ std::vector<Triangle> Delaunay::compute() {
     std::sort(triangles.begin(), triangles.end());
 
     return triangles;
+}
+
+std::vector<Node> Delaunay::get_nodes() const {
+    return nodes;
 }
 
 std::vector<Edge> Delaunay::get_edges() const {
