@@ -30,6 +30,8 @@ public:
     ~Node();
     bool operator==(const Node& other) const;
     bool operator<(const Node& other) const;
+    double get_x() const;
+    double get_y() const;
     Coord2D get_coords() const;
     int get_index() const;
 };
@@ -77,6 +79,7 @@ public:
     Delaunay(std::vector<Coord2D> points);
     ~Delaunay();
     std::vector<Triangle> compute();
+    std::vector<Node> get_nodes() const;
     std::vector<Edge> get_edges() const;
     std::vector<std::array<int, 2>> get_edges_index() const;
     std::vector<Triangle> get_triangles() const;
