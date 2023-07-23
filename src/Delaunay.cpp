@@ -298,6 +298,53 @@ Triangle Delaunay::super_triangle() {
     return outer_nodes;
 }
 
+Triangle Delaunay::add_point(double x, double y) {
+    return add_point(Coord2D{x, y});
+}
+
+Triangle Delaunay::add_point(Coord2D p) {
+    int index = nodes.size();
+    nodes.emplace_back(p, index);
+
+    return add_point(nodes.at(index));
+}
+
+Triangle Delaunay::add_point(Node node) {
+    // Instantiate removed triangles vertices
+    std::vector<Edge> edges{};
+    // Loop over all triangles
+    for(size_t i{0}; i<triangles.size(); i++) {
+        auto triangle = triangles.at(i);
+        if(triangle.circumscribe(node)) {
+            // Retrieve edges and add to removed ones
+            auto v = triangle.get_edges();
+            edges.insert(edges.end(), v.begin(), v.end());
+            // Remove triangle because it is no longer Delaunay
+            triangles.erase(std::remove(triangles.begin(), triangles.end(), triangle), triangles.end());
+            i--;
+        }
+    }
+    // Remove duplicated edges (they do not form Delaunay triangules)
+    std::sort(edges.begin(), edges.end());
+    int N{static_cast<int>(edges.size())};
+    Edge edge_to_remove{};
+    for(size_t i{0}; i < (N-1); i++) {
+        if(edges.at(i) == edges.at(i+1)) {
+            edge_to_remove = edges.at(i);
+            edges.erase(std::remove(edges.begin(), edges.end(), edge_to_remove), edges.end());
+            i--;
+            N-=2;
+        }
+    }
+    // Create new triangles
+    for (const Edge& edge: edges) {
+        auto nodes = edge.get_vertices();
+        Node n1 = nodes.at(0);
+        Node n2 = nodes.at(1);
+        triangles.push_back(Triangle{node, n1, n2});
+    }
+}
+
 // Run algorithm
 std::vector<Triangle> Delaunay::compute() {
 
@@ -307,44 +354,9 @@ std::vector<Triangle> Delaunay::compute() {
     // Compute super triangle
     triangles.push_back(super_triangle());
 
-    // Instantiate removed triangles vertices
-    std::vector<Edge> edges{};
-
     // Loop over all nodes
     for(Node& node: nodes) {
-        // Ensure vertices to be removed is clear
-        edges.clear();
-        // Loop over all triangles
-        for(size_t i{0}; i<triangles.size(); i++) {
-            auto triangle = triangles.at(i);
-            if(triangle.circumscribe(node)) {
-                // Retrieve vertices and add to removed ones
-                auto v = triangle.get_edges();
-                edges.insert(edges.end(), v.begin(), v.end());
-                // Remove triangle because it is no longer Delaunay
-                triangles.erase(std::remove(triangles.begin(), triangles.end(), triangle), triangles.end());
-                i--;
-            }
-        }
-        // Remove duplicated edges (they do not form Delaunay triangules)
-        std::sort(edges.begin(), edges.end());
-        int N{static_cast<int>(edges.size())};
-        Edge edge_to_remove{};
-        for(size_t i{0}; i < (N-1); i++) {
-            if(edges.at(i) == edges.at(i+1)) {
-                edge_to_remove = edges.at(i);
-                edges.erase(std::remove(edges.begin(), edges.end(), edge_to_remove), edges.end());
-                i--;
-                N-=2;
-            }
-        }
-        // Create new triangles
-        for (const Edge& edge: edges) {
-            auto nodes = edge.get_vertices();
-            Node n1 = nodes.at(0);
-            Node n2 = nodes.at(1);
-            triangles.push_back(Triangle{node, n1, n2});
-        }
+        add_point(node);
     }
 
     // Remove super triangle nodes

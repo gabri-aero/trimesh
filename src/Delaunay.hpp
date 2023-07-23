@@ -79,6 +79,9 @@ public:
     Delaunay(std::vector<Coord2D> points);
     ~Delaunay();
     std::vector<Triangle> compute();
+    Triangle add_point(double x, double y);
+    Triangle add_point(Coord2D p);
+    Triangle add_point(Node p);
     std::vector<Node> get_nodes() const;
     std::vector<Edge> get_edges() const;
     std::vector<std::array<int, 2>> get_edges_index() const;

@@ -9,11 +9,12 @@ TEST(PlotUtilsTest, PlotNodes) {
   std::vector<double> x;
   std::vector<double> y;
   
-  std::srand(static_cast<unsigned>(std::time(nullptr)));
-  const int n = 100;
+  std::srand(0);
+  const int n = 10;
 
     std::random_device rd;
-    std::mt19937 gen(rd());
+    // std::mt19937 gen(rd());
+    std::mt19937 gen(0);
     std::uniform_real_distribution<double> dis(0.0, 10.0);
 
     for (int i = 0; i < n; ++i) {
@@ -31,12 +32,12 @@ TEST(PlotUtilsTest, PlotNodes) {
 
    d.compute();
 
-   std::vector<Edge> edges{d.get_edges()};
-   std::vector<Node> nodes{d.get_nodes()};
+   // Plot::plot_nodes(nodes);
+   Plot::plot_mesh(d.get_edges(), d.get_nodes());
 
-   Plot::plot_nodes(nodes);
-   Plot::plot_mesh(edges);
-   Plot::plot_mesh(edges, nodes);
+   d.add_point(5, 5);
+   
+   Plot::plot_mesh(d.get_edges(), d.get_nodes());
 
 
 }

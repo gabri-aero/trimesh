@@ -69,7 +69,7 @@ void plot_mesh(std::vector<Edge> edges, std::vector<Node> nodes = std::vector<No
     gp << "set ylabel 'Y'\n";
     
     gp << "stats '-' using 1:2 nooutput\n";
-    gp.send1d(mesh_pts);
+    gp.send1d(node_pts);
 
     gp << "x_min = STATS_min_x\n";
     gp << "x_max = STATS_max_x\n";
@@ -87,4 +87,7 @@ void plot_mesh(std::vector<Edge> edges, std::vector<Node> nodes = std::vector<No
     gp.send1d(node_pts);
 }
 
+void close_gnuplot(){
+    std::system("pkill gnuplot");
+ }
 }
