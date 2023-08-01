@@ -6,6 +6,8 @@
 #include <ctime>
 
 TEST(PlotUtilsTest, PlotNodes) {
+  Plot::close_gnuplot();
+  
   std::vector<double> x;
   std::vector<double> y;
   

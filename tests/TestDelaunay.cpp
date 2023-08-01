@@ -122,3 +122,67 @@ TEST(DelaunayTest, TriangulationTest3) {
 
   ASSERT_EQ(true_tris, calc_tris);
 }
+
+
+TEST(DelaunayTest, NeighborTest) {
+  std::vector<double> x{-1.01, -1.01, 1.01, 3.04, 5.05, 8.21, 8.22};
+  std::vector<double> y{0, 5, 2.01, 3.02, 2.003, 0, 5.03};
+
+  std::vector<Coord2D> points;
+
+	for(size_t i{0}; i<x.size(); i++) {
+		points.push_back(Coord2D{x[i], y[i]});
+	}
+
+  Delaunay d{points};
+
+  d.compute();
+
+  std::vector<std::array<int, 2>> calc_edges{d.get_edges_index()};
+
+  std::vector<std::array<int,2>>  true_edges{
+    {0, 1},
+    {0, 2},
+    {0, 4},
+    {0, 5},
+    {1, 2},
+    {1, 3},
+    {1, 6},
+    {2, 3},
+    {2, 4},
+    {3, 4},
+    {3, 6},
+    {4, 5},
+    {4, 6},
+    {5, 6}
+  };
+
+  std::vector<std::array<int, 3>> calc_tris{d.get_triangles_index()};
+
+  std::vector<std::array<int, 3>> true_tris{
+    {0, 1, 2},
+    {0, 2, 4},
+    {0, 4, 5},
+    {1, 2, 3},
+    {1, 3, 6},
+    {2, 3, 4},
+    {3, 4, 6},
+    {4, 5, 6}
+  };
+
+  Triangle t = d.get_triangles().at(0);
+
+  auto neighbors = d.get_neighbors(t);
+
+  std::vector<std::array<int, 3>> calc_neighbors{
+    neighbors.at(0).first.get_vertices_index(),
+    neighbors.at(1).first.get_vertices_index()
+  };
+
+  std::vector<std::array<int, 3>> true_neighbors{
+    {0, 2, 4},
+    {1, 2, 3}
+  };
+
+  ASSERT_EQ(calc_neighbors, true_neighbors);
+}

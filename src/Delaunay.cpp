@@ -151,6 +151,10 @@ bool Triangle::operator==(const Triangle& other) const {
     return data[0] == other.data[0] && data[1] == other.data[1] && data[2] == other.data[2];
 }
 
+bool Triangle::operator!=(const Triangle& other) const {
+    return !operator==(other);
+}
+
 bool Triangle::operator<(const Triangle& other) const {
     if(data[0] == other.data[0]) {
         if(data[1] == other.data[1]) {
@@ -412,4 +416,20 @@ std::vector<std::array<int, 3>> Delaunay::get_triangles_index() const {
         triangles_index.push_back(triangle.get_vertices_index());
     }
     return triangles_index;
+}
+
+std::vector<std::pair<Triangle, Edge>> Delaunay::get_neighbors(Triangle current) {
+    std::vector<std::pair<Triangle, Edge>> neighbors;
+    for(const auto& triangle: triangles) {
+        if(triangle != current) {
+            for(const auto& any_edge: triangle.get_edges()) {
+                for(const auto& edge: current.get_edges()) {
+                    if(any_edge == edge) {
+                        neighbors.emplace_back(triangle, edge);
+                    }
+                }
+            }
+        }
+    }
+    return neighbors;
 }

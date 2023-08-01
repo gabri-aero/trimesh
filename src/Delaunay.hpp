@@ -60,6 +60,7 @@ public:
     Triangle(Node, Node, Node);
     Node& operator[](int index);
     bool operator==(const Triangle& other) const;
+    bool operator!=(const Triangle& other) const;
     bool operator<(const Triangle& other) const; 
     std::array<Node, 3> get_vertices() const;
     std::array<Edge, 3> get_edges() const;
@@ -87,6 +88,7 @@ public:
     std::vector<std::array<int, 2>> get_edges_index() const;
     std::vector<Triangle> get_triangles() const;
     std::vector<std::array<int, 3>> get_triangles_index() const;
+    std::vector<std::pair<Triangle, Edge>> get_neighbors(Triangle t);
 };
 
 
