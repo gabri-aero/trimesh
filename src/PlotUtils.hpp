@@ -5,6 +5,9 @@
 
 #include "gnuplot-iostream.hpp"
 
+#ifndef _PLOT_UTILS_HPP_
+#define _PLOT_UTILS_HPP_
+
 namespace Plot {
 
 void plot_nodes(std::vector<Node> nodes) {
@@ -91,3 +94,5 @@ void close_gnuplot(){
     std::system("pkill gnuplot");
  }
 }
+
+#endif //_PLOT_UTILS_HPP_
