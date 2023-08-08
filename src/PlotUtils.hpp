@@ -47,6 +47,8 @@ void plot_nodes(std::vector<Node> nodes) {
 void plot_mesh(std::vector<Edge> edges, std::vector<Node> nodes = std::vector<Node>{}) {
     Gnuplot gp;
 
+    gp << "set size ratio -1 \n";
+
     std::vector<boost::tuple<double, double, double, double>> mesh_pts;
     std::vector<std::pair<double, double>> node_pts;
 
@@ -79,8 +81,8 @@ void plot_mesh(std::vector<Edge> edges, std::vector<Node> nodes = std::vector<No
     gp << "y_min = STATS_min_y\n";
     gp << "y_max = STATS_max_y\n";
 
-    gp << "x_padding = 0.1 * (x_max - x_min)\n";
-    gp << "y_padding = 0.1 * (y_max - y_min)\n";
+    gp << "x_padding = 0.1 + 0.1 * (x_max - x_min)\n";
+    gp << "y_padding = 0.1 + 0.1 * (y_max - y_min)\n";
 
     gp << "set xrange [x_min - x_padding : x_max + x_padding]\n";
     gp << "set yrange [y_min - y_padding : y_max + y_padding]\n";
