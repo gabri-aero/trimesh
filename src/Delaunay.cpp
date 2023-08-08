@@ -6,7 +6,7 @@
 #include <array>
 #include <set>
 
-#include "Delaunay.hpp"
+#include <Delaunay.hpp>
 
 
 // Coord2D constructors
@@ -22,8 +22,9 @@ Coord2D::Coord2D(const Coord2D &coords) {
     y = coords.y;
 }
 
+// Node operator (avoids issue with floating point when closed boudnaries)
 bool Coord2D::operator==(const Coord2D& other) const {
-    return x == other.x && y == other.y;
+    return std::abs(x - other.x) < eps && std::abs(y - other.y) < eps;
 }
 
 // Node constructors
@@ -47,8 +48,9 @@ Node::~Node() {
 
 }
 
+// Node operators
 bool Node::operator==(const Node& other) const {
-    return coords == other.coords && i == other.i;
+    return coords == other.coords;
 }
 
 bool Node::operator<(const Node& other) const {
@@ -70,6 +72,11 @@ Coord2D Node::get_coords() const {
 
 int Node::get_index() const {
     return i;
+}
+
+// Node setters
+void Node::set_index(int index) {
+    i = index;
 }
 
 // Auxiliary functions for 2D
@@ -105,6 +112,7 @@ Edge::Edge(const Edge &edge) {
     data = edge.data;
 }
 
+// Edge operators
 bool Edge::operator==(const Edge& other) const {
     return data[0] == other.data[0] && data[1] == other.data[1];
 }
@@ -124,12 +132,18 @@ std::ostream& operator<<(std::ostream& os, const Edge& t) {
     return os;
 }
 
+// Edge getters
 std::array<Node, 2> Edge::get_vertices() const {
     return data;
 }
 
 std::array<int, 2> Edge::get_vertices_index() const {
     return std::array<int, 2>{data[0].get_index(), data[1].get_index()};
+}
+
+// Edge length
+double Edge::length() {
+    return dist(data[0].get_coords(), data[1].get_coords());
 }
 
 // Triangle constructors
@@ -140,7 +154,7 @@ Triangle::Triangle(Node n1, Node n2, Node n3)
     edges = std::array<Edge, 3>{Edge{n1, n2}, Edge{n2, n3}, Edge{n1, n3}};
 }
 
-// Define triangle subscript operator
+// Define triangle operators
 Node& Triangle::operator[](int index) {
     if (index >= 3) 
         throw std::out_of_range("Index out of range");
@@ -234,6 +248,21 @@ Coord2D Triangle::circumcenter() {
     return Coord2D{x, y};
 }
 
+// Compute triangle centroid
+Coord2D Triangle::centroid() {
+    // Get tirnagle vertices
+    Coord2D v1 = data[0].get_coords();
+    Coord2D v2 = data[1].get_coords();
+    Coord2D v3 = data[2].get_coords();
+
+    // Compute average of coordinates
+    double x = (v1.x + v2.x + v3.x) / 3;
+    double y = (v1.y + v2.y + v3.y) / 3;
+
+    // Return coordinate object
+    return Coord2D{x, y};
+}
+
 // Check if node is inside triangle circumcircle
 bool Triangle::circumscribe(Node& n) {
 
@@ -250,12 +279,59 @@ bool Triangle::circumscribe(Node& n) {
     return distance < circum_radius;    
 }
 
+// Compute triangle quality
+double Triangle::get_alpha() {
+    // Compute length of triangle edges
+    std::vector<double> sides(edges.size());
+    std::transform(edges.begin(), edges.end(), sides.begin(), [](Edge& edge) { return edge.length(); });
+
+    // Sort edges length
+    std::sort(sides.begin(), sides.end());
+
+    // Get edges
+    double a = sides[0];
+    double b = sides[1];
+    double c = sides[2];
+    
+    // Apply cosine theorem
+    double A = acos((b*b + c*c - a*a) / (2*b*c)); // A is opposite angle to smallest side
+
+    // Return lowest triangle inner angle - A
+    return A;
+}
+
+// Compute triangle area
+double Triangle::get_area() {
+    // Compute length of triangle edges
+    std::vector<double> sides(edges.size());
+    std::transform(edges.begin(), edges.end(), sides.begin(), [](Edge& edge) { return edge.length(); });
+
+    // Get edges
+    double a = sides[0];
+    double b = sides[1];
+    double c = sides[2];
+
+    // Compute semi-perimeter
+    double s = (a + b + c) / 2;
+
+    // Apply area formula based on sides length
+    return sqrt(s*(s-a)*(s-b)*(s-c));
+}
+
 // Delaunay constructors
+Delaunay::Delaunay() {};
+
 Delaunay::Delaunay(std::vector<Coord2D> points) {
     int i{};
     for(Coord2D &point: points) {
         nodes.emplace_back(point, i++);
     }
+}
+
+// Constructor for rebuilding a mesh - it allows external triangles/nodes filtering 
+Delaunay::Delaunay(std::vector<Triangle> triangles, std::vector<Node> nodes) 
+: triangles{triangles}, nodes{nodes} {
+    
 }
 
 Delaunay::~Delaunay() {
@@ -363,33 +439,20 @@ std::vector<Triangle> Delaunay::compute() {
         add_point(node);
     }
 
-    // Remove super triangle nodes
-    std::array<int, 3> index; // Instantiate variable
-    size_t i{0};
-    while(i < triangles.size()) {
-        index = triangles[i].get_vertices_index();
-        for(int& j: index) {
-            if(j < 0) {
-                triangles.erase(std::remove(triangles.begin(), triangles.end(), triangles[i--]), triangles.end());
-                break;
-            }
-        }
-        i++;
-    }
-
     // Ensure proper triangles ordering
     std::sort(triangles.begin(), triangles.end());
 
     return triangles;
 }
 
+// Delaunay getters
 std::vector<Node> Delaunay::get_nodes() const {
     return nodes;
 }
 
 std::vector<Edge> Delaunay::get_edges() const {
     std::set<Edge> edges;
-    for(const Triangle& triangle: triangles) {
+    for(const Triangle& triangle: get_triangles()) {
         auto triangle_edges = triangle.get_edges();
         edges.insert(triangle_edges.begin(), triangle_edges.end());
     }
@@ -407,7 +470,23 @@ std::vector<std::array<int, 2>> Delaunay::get_edges_index() const {
 }
 
 std::vector<Triangle> Delaunay::get_triangles() const {
-    return triangles;
+    
+    std::vector<Triangle> triangle_list = triangles;
+    // Remove super triangle nodes
+    std::array<int, 3> index; // Instantiate variable
+    size_t i{0};
+    while(i < triangle_list.size()) {
+        index = triangle_list[i].get_vertices_index();
+        for(int& j: index) {
+            if(j < 0) { // Supertriangle contains "negative" nodes
+                triangle_list.erase(std::remove(triangle_list.begin(), triangle_list.end(), triangle_list[i--]), triangle_list.end());
+                break;
+            }
+        }
+        i++;
+    }   
+
+    return triangle_list;
 }
 
 std::vector<std::array<int, 3>> Delaunay::get_triangles_index() const {
@@ -418,6 +497,7 @@ std::vector<std::array<int, 3>> Delaunay::get_triangles_index() const {
     return triangles_index;
 }
 
+// Function to get the neighboring triangles to the inputted triangle -> TO DO: optimise
 std::vector<std::pair<Triangle, Edge>> Delaunay::get_neighbors(Triangle current) {
     std::vector<std::pair<Triangle, Edge>> neighbors;
     for(const auto& triangle: triangles) {
@@ -432,4 +512,75 @@ std::vector<std::pair<Triangle, Edge>> Delaunay::get_neighbors(Triangle current)
         }
     }
     return neighbors;
+}
+
+// Get bad triangles: triangle quality lower than input value
+std::vector<Triangle> Delaunay::get_bad_triangles(double alpha) {
+    // Instantiate bad triangles vector
+    std::vector<Triangle> bad_triangles;
+
+    // Loop over all triangles
+    for(auto& triangle: get_triangles()) {
+        if(triangle.get_alpha() < alpha) { // check quality
+            bad_triangles.push_back(triangle);
+        }
+    }
+
+    return bad_triangles;
+}
+
+// Get big triangles - area lower than right isosceles triangle with input leg length
+std::vector<Triangle> Delaunay::get_big_triangles(double h) {
+    // Instantiate big triangles
+    std::vector<Triangle> big_triangles;
+
+    // Loop over all triangles
+    for(auto& triangle: get_triangles()) {
+        if(triangle.get_area() > 0.5*h*h) { // check area
+            big_triangles.push_back(triangle);
+        }
+    }
+
+    return big_triangles;
+}
+
+// Refine triangulation function
+std::vector<Triangle> Delaunay::refine(double alpha, double h) {
+    // Initialize bad triangles (bad quality)
+    std::vector<Triangle> bad_triangles = get_bad_triangles(alpha);
+    do {
+        for(auto triangle: bad_triangles) {
+            // check if there is no error -> TO DO: check why there is an error in some cases
+            try {
+                // add new point at the circumcenter of the worst triangle
+                add_point(triangle.circumcenter()); 
+
+                // adding a point needs triangulation recalculation -> TO DO: optimize algorithm to check only if new triangles are bad
+                break; 
+            } catch (const std::out_of_range& e) {
+                // if error worst triangle is skipped an for loop moves to the next worse triangle
+                std::cerr << "Inserting a new point has caused an out_of_range exception: " << e.what() << std::endl;
+            }
+        }
+        // re-compute bad triangles
+        bad_triangles = get_bad_triangles(alpha);
+    } while(bad_triangles.size() > 0); // refine bad triangles as long as there are bad triangles
+
+    // refine big triangles -> "new bad triangles"
+    std::vector<Triangle> big_triangles = get_big_triangles(h);
+    // refinement structure is repeated
+    do {
+        for(auto triangle: big_triangles) {
+            try {
+                add_point(triangle.circumcenter());
+                break;
+            } catch (const std::out_of_range& e) {
+                std::cerr << "Inserting a new point has caused an out_of_range exception: " << e.what() << std::endl;
+            }
+        }
+        big_triangles = get_big_triangles(h);
+    } while(big_triangles.size() > 0);
+
+    // return refined triangles
+    return get_triangles();
 }

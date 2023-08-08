@@ -2,9 +2,11 @@ find_package(Gnuplot REQUIRED)
 include_directories(${GNUPLOT_INCLUDE_DIRS})
 
 set(CPP_SOURCES 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Delaunay.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/Delaunay.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.cpp)
 set(HPP_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/Delaunay.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PlotUtils.hpp)
 add_library(TRIMESH ${CPP_SOURCES} ${HPP_HEADERS})
 
