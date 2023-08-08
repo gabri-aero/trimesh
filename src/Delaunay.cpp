@@ -74,6 +74,11 @@ int Node::get_index() const {
     return i;
 }
 
+// Node setters
+void Node::set_index(int index) {
+    i = index;
+}
+
 // Auxiliary functions for 2D
 
 // Distance between two points
@@ -321,6 +326,12 @@ Delaunay::Delaunay(std::vector<Coord2D> points) {
     for(Coord2D &point: points) {
         nodes.emplace_back(point, i++);
     }
+}
+
+// Constructor for rebuilding a mesh - it allows external triangles/nodes filtering 
+Delaunay::Delaunay(std::vector<Triangle> triangles, std::vector<Node> nodes) 
+: triangles{triangles}, nodes{nodes} {
+    
 }
 
 Delaunay::~Delaunay() {

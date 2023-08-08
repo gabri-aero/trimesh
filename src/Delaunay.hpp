@@ -35,6 +35,7 @@ public:
     double get_y() const;
     Coord2D get_coords() const;
     int get_index() const;
+    void set_index(int index);
 };
 
 
@@ -82,7 +83,9 @@ class Delaunay
     std::vector<Triangle> triangles{};
     Triangle super_triangle();
 public:
+    Delaunay();
     Delaunay(std::vector<Coord2D> points);
+    Delaunay(std::vector<Triangle> triangles, std::vector<Node> nodes);
     ~Delaunay();
     std::vector<Triangle> compute();
     Triangle add_point(double x, double y);
