@@ -41,6 +41,76 @@ std::vector<Node> Boundary::get_nodes() {
     return nodes;
 }
 
+// Boundary static built-in functions to easily create pre-defined boundaries
+
+// Line boundary
+Boundary Boundary::line(Coord2D p0, Coord2D p1, double h) {
+    int N = static_cast<int>(dist(p0, p1) / h);
+    double p, x, y;
+    std::vector<Node> nodes;
+    for(double i{0}; i <= N; i++) {
+        p = i/N;
+        x = p * p0.x + (1-p) * p1.x;
+        y = p * p0.y + (1-p) * p1.y;
+        nodes.emplace_back(x, y, i);
+    }
+    return Boundary{nodes, false};
+}
+
+// Circle boundary
+Boundary Boundary::circle(Coord2D c, double r, double h) {
+    double length = 2*M_PI*r;
+    int N = static_cast<int>(length / h);
+    double p, angle, x, y;
+    std::vector<Node> nodes;
+    for(double i{0}; i < N; i++) {
+        p = i/N;
+        angle = p * 2 * M_PI;
+        x = c.x + r*cos(angle);
+        y = c.y + r*sin(angle);
+        nodes.emplace_back(x, y, i);
+    }
+    Boundary base{nodes};
+    nodes.insert(nodes.begin(), Node{c, -1});
+    
+    return Boundary{nodes, base.get_edges()};
+}
+
+// Enable combination of unlimited number of boundaries
+template<typename T, typename... Args>
+Boundary Boundary::combine(T base, Args... boundaries) {
+    for(const Boundary& boundary : {boundaries...}) {
+        base = Boundary::combine(base, boundary);
+    }
+    return base;
+}
+
+// Static function to combine to boundary objects into one
+Boundary Boundary::combine(Boundary b1, Boundary b2) {
+    std::vector<Node> nodes = b1.get_nodes();
+    int i = nodes.size();
+    bool repeated;
+    for(Node& n2: b2.get_nodes()) {
+        repeated = false;
+        for(Node& n1: b1.get_nodes()) {
+            if(n2 == n1) {
+                repeated = true;
+                break;
+            }
+        }
+        if (!repeated) {
+            n2.set_index(i++);
+            nodes.push_back(n2);
+        }
+    }
+    std::vector<Edge> edges = b1.get_edges();
+    std::vector<Edge> edges2 = b2.get_edges();
+    edges.insert(edges.end(), edges2.begin(), edges2.end());
+    edges.push_back(Edge{nodes.back(), nodes.back()});
+    return Boundary{nodes, edges};
+}
+
+
 // Mesh constructor
 Mesh::Mesh(Boundary boundary, double h) {
     segments = boundary.get_edges();
