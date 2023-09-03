@@ -16,6 +16,14 @@ Implementation of an algorithm for meshing 2D domains using triangular elements.
   <img src="img/cylinder/refined_mesh.png" alt="Mesh" width="30%" />
 </p>
 
+# Example use cases
+
+## NACA airfoil 2412
+
+<img src="img/airfoil/airfoil.png">
+
+
+
 # References
 
 [1] A. Bowyer, ‘Computing Dirichlet tessellations’, The Computer Journal, vol. 24, no. 2, pp. 162–166, Feb. 1981.
