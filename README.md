@@ -29,9 +29,11 @@ Refinement iteration selects worse quality triangle as the triangle with the mor
 
 ## NACA airfoil 2412
 
+<p align="center">
 <img src="img/airfoil/airfoil.png">
+</p>
 
-
+**_NOTE:_** The objective of this project was to develop a triangular meshing tool. The provided code has still a lot of room for improvement since the program struggles with some domains and meshing conditions. However, I did this project just for fun. As you might notice there are two main differences w.r.t. Ruppert's algorith: 1. no encroached segments in the boundary are considered 2. a refinement of so-called big triangles are included. Basically Ruppert's algorithm only includes the first one. I included the latter to come closer to typical ANSYS,gmsh,etc. mesh looking. Ideas of other algorithms that account for "big triangles" keeping the conformity of the boundary are welcome.
 
 # References
 
