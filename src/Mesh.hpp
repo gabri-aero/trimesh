@@ -15,6 +15,7 @@ public:
     std::vector<Node> get_nodes();
     static Boundary line(Coord2D p0, Coord2D p1, double h);
     static Boundary circle(Coord2D p0, double r, double h);
+    static Boundary naca(std::string code, double chord);
     static Boundary combine(Boundary b1, Boundary b2);
     template<typename T, typename... Args>
     static Boundary combine(T value, Args... args);

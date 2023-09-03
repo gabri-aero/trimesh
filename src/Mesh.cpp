@@ -76,6 +76,58 @@ Boundary Boundary::circle(Coord2D c, double r, double h) {
     return Boundary{nodes, base.get_edges()};
 }
 
+
+// Naca airfoil boundary
+Boundary Boundary::naca(std::string code, double chord) {
+    double m = std::stod(code.substr(0, 1)) / 100;
+    double p = std::stod(code.substr(1, 1)) / 10;
+    double t = std::stod(code.substr(2, 2)) / 100;
+
+    // Defining naca airfoil
+    auto yc = [&](double x) {
+        if (x <= p) {
+            return (m / (p*p)) * (2*p*x - x*x);
+        } else {
+            return (m / pow(1-p, 2)) * ((1-2*p) + 2*p*x - x*x);
+        }
+    };
+    auto dyc = [&](double x) {
+        if (x <= p) {
+            return (2*m / (p*p)) * (p - x);
+        } else {
+            return (2*m / pow(1-p, 2)) * (p - x);
+        }
+    };
+    auto yt = [&](double x) {
+        return 5*t *(0.2969*sqrt(x) - 0.126*x - 0.3516*pow(x,2) + 0.2843*pow(x,3) - 0.1015*pow(x,4));
+    };
+    auto theta = [&](double x){
+        return atan(dyc(x));
+    };
+    auto xu = [&](double x) {
+        return x - yt(x) * sin(theta(x)) - 0.5;
+    };
+    auto xl = [&](double x) {
+        return x + yt(x) * sin(theta(x)) - 0.5;
+    };
+    auto yu = [&](double x) {
+        return yc(x) + yt(x) * cos(theta(x));
+    };
+    auto yl = [&](double x) {
+        return yc(x) - yt(x) * cos(theta(x));
+    };
+    double xc;
+    std::vector<Node> lower;
+    std::vector<Node> upper;
+    for(double theta{0}; theta <= (M_PI+eps); theta += M_PI / 32) {
+        xc = (1 - cos(theta)) / 2;
+        upper.emplace_back(xu(xc), yu(xc));
+        lower.emplace_back(xl(xc), yl(xc));
+    }
+    
+    return Boundary::combine(Boundary{upper, false}, Boundary{lower, false});
+}
+
 // Enable combination of unlimited number of boundaries
 template<typename T, typename... Args>
 Boundary Boundary::combine(T base, Args... boundaries) {

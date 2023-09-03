@@ -25,6 +25,14 @@ Refinement iteration selects worse quality triangle as the triangle with the mor
 <img src="img/cylinder/mesh.gif" alt="Mesh GIF" width="60%">
 </p>
 
+# Example use cases
+
+## NACA airfoil 2412
+
+<img src="img/airfoil/airfoil.png">
+
+
+
 # References
 
 [1] A. Bowyer, ‘Computing Dirichlet tessellations’, The Computer Journal, vol. 24, no. 2, pp. 162–166, Feb. 1981.
